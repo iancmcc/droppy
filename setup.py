@@ -18,8 +18,8 @@ setup(name='droppy',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          'gevent',
-          'gunicorn',
+          'formencode',
+          'pyyaml',
           'pyxdeco'
       ],
       entry_points="""
