@@ -4,7 +4,7 @@
 from __future__ import absolute_import
 
 import yaml
-from collections import defaultdict
+from collections import defaultdict, Mapping
 from functools import wraps, update_wrapper
 from pyxdeco import class_level_decorator
 
@@ -25,13 +25,11 @@ class Document(object):
         """
         Apply parsed values to a document.
         """
-        try:
+        if isinstance(values, Mapping):
             for k, v in values.iteritems():
                 prop = self._props.get(k)
                 if prop is not None:
                     prop.__set__(self, v)
-        except AttributeError:
-            pass
 
     @classmethod
     def load(cls, raw):
