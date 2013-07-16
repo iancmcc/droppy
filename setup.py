@@ -18,9 +18,12 @@ setup(name='droppy',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          # -*- Extra requirements: -*-
+          'gevent',
+          'gunicorn',
+          'pyxdeco'
       ],
       entry_points="""
-      # -*- Entry points: -*-
+      [console_scripts]
+      doathing = droppy.application:main
       """,
       )
