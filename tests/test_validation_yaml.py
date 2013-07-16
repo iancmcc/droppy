@@ -71,6 +71,28 @@ class TestYamlValidation(unittest.TestCase):
         self.assertEquals(result.http.ssl, True)
 
 
+    def test_bad(self):
+        doc = """
+        http:
+            notanattribute: 9090
+        """.strip()
+
+        class ThingDoc(yaml.Document):
+
+            @yaml.Document.YAMLProperty
+            def whatever(self):
+                return 0
+
+        class HttpDoc(yaml.Document):
+
+            @yaml.Document.YAMLProperty
+            def http(self): 
+                return ThingDoc()
+
+        result = HttpDoc.load(doc)
+
+        self.assertTrue(isinstance(result, HttpDoc))
+        self.assertFalse(hasattr(result.http, 'notanattribute'))
 
 if __name__ == "__main__":
     unittest.main()
