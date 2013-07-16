@@ -3,6 +3,7 @@
 #
 from __future__ import absolute_import
 
+import json
 import yaml
 from collections import defaultdict, Mapping
 from functools import wraps, update_wrapper
@@ -14,7 +15,7 @@ MARKER = object()
 
 class Document(object):
     """
-    Represents a YAML document.
+    Represents a parseable document.
     """
     _props = {}
 
@@ -32,7 +33,7 @@ class Document(object):
                     prop.__set__(self, v)
 
     @classmethod
-    def load(cls, raw):
+    def loadYAML(cls, raw):
         """
         Parse a document according to this schema.
         """
@@ -41,15 +42,28 @@ class Document(object):
         inst._apply(loaded)
         return inst
 
-    @staticmethod
-    @class_level_decorator
-    def YAMLProperty(func, cls):
-        prop = _YAMLProperty(func)
-        cls._props[func.__name__] = prop
-        setattr(cls, func.__name__, prop)
+    @classmethod
+    def loadJSON(cls, raw):
+        """
+        Parse a JSON document.
+        """
+        inst = cls()
+        if isinstance(raw, basestring):
+            loaded = json.loads(raw)
+        else:
+            loaded = json.load(raw)
+        inst._apply(loaded)
+        return inst
 
 
-class _YAMLProperty(object):
+@class_level_decorator
+def Property(func, cls):
+    prop = _Property(func)
+    cls._props[func.__name__] = prop
+    setattr(cls, func.__name__, prop)
+
+
+class _Property(object):
 
     def __init__(self, func):
         update_wrapper(self, func)
