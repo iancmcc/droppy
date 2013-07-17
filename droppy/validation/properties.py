@@ -7,7 +7,7 @@ import json
 import yaml
 from collections import defaultdict, Mapping
 from functools import wraps, update_wrapper
-from pyxdeco import class_level_decorator
+from pyxdeco.advice import addClassAdvisor
 
 
 MARKER = object()
@@ -17,8 +17,6 @@ class Document(object):
     """
     Represents a parseable document.
     """
-    _props = {}
-
     def __init__(self):
         self._values = defaultdict(lambda:MARKER)
 
@@ -26,7 +24,7 @@ class Document(object):
         """
         Apply parsed values to a document.
         """
-        if isinstance(values, Mapping):
+        if isinstance(values, Mapping) and hasattr(self, '_props'):
             for k, v in values.iteritems():
                 prop = self._props.get(k)
                 if prop is not None:
@@ -56,21 +54,25 @@ class Document(object):
         return inst
 
 
-@class_level_decorator
-def Property(func, cls):
-    prop = _Property(func)
-    cls._props[func.__name__] = prop
-    setattr(cls, func.__name__, prop)
 
+class Property(object):
 
-class _Property(object):
-
-    def __init__(self, func):
-        update_wrapper(self, func)
+    def __init__(self, func, depth=2):
         self._func = func
         self._name = func.__name__
         self._default = MARKER
         self._validators = []
+        update_wrapper(self, func)
+        addClassAdvisor(self.register, depth=depth)
+
+    def register(self, cls):
+        if not hasattr(cls, '_props'):
+            cls._props = {}
+        cls._props[self.__name__] = self
+        return cls
+
+    def add_validator(self, validator):
+        self._validators.append(validator)
 
     def _get_default(self, instance):
         if self._default is MARKER:
@@ -88,5 +90,14 @@ class _Property(object):
         if isinstance(default, Document):
             default._apply(value)
             value = default
+        for validator in self._validators:
+            value = validator.apply(value)
         obj._values[self._name] = value
+
+
+def ensure_property(f, depth=2):
+    if not isinstance(f, Property):
+        f = Property(f, depth)
+    return f
+
 

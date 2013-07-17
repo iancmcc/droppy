@@ -1,5 +1,7 @@
 import unittest
 
+from formencode import Invalid
+
 from droppy.validation.properties import Document, Property
 
 
@@ -145,6 +147,7 @@ class TestParsing(unittest.TestCase):
         """.strip()
         doc = StringIO(yamldoc)
 
+
         class PortDoc(Document):
 
             @Property
@@ -161,6 +164,30 @@ class TestParsing(unittest.TestCase):
 
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http.port, 9090)
+
+
+from droppy.validation.validation import NotEmpty
+
+class TestValidators(unittest.TestCase):
+
+    def test_notempty(self):
+
+        class TestDoc(Document):
+            @NotEmpty
+            def a(self): 
+                return "default"
+
+        doc = """
+        a: blah
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "blah")
+
+        doc = """
+        a: 
+        b: 1
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
 
 
 if __name__ == "__main__":
