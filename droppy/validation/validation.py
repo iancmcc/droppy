@@ -5,7 +5,7 @@ import inspect
 from pyxdeco import class_level_decorator
 import formencode.validators as fv
 
-from .properties import ensure_property
+#from .properties import ensure_property
 
 
 def autocall_decorator(func):
