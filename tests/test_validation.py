@@ -2,7 +2,8 @@ import unittest
 
 from formencode import Invalid
 
-from droppy.validation.validation import NotEmpty, Int
+from droppy.validation.validation import NotEmpty, Int, ConfirmType, Constant
+from droppy.validation.validation import OneOf, DictConverter
 from droppy.validation.properties import Document, Property
 
 
@@ -72,7 +73,6 @@ class TestParsing(unittest.TestCase):
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http.port, 8080)
         self.assertEquals(result.http.ssl, True)
-
 
     def test_bad(self):
         doc = """
@@ -201,6 +201,85 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML("")
         self.assertEquals(result.a, 1)
 
+    def test_int_called(self):
+
+        class TestDoc(Document):
+            @Int()
+            def a(self): 
+                return 1
+
+        doc = """
+        a: 12345
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, 12345)
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, 1)
+
+    def test_confirm_type(self):
+
+        class TestDoc(Document):
+            @ConfirmType(subclass=int)
+            def a(self): 
+                return 1
+
+        doc = """
+        a: notanint
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+    def test_constant(self):
+
+        class TestDoc(Document):
+            @Constant("XYZ")
+            def a(self): 
+                return 1
+
+        doc = """
+        a: notanint
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "XYZ")
+
+        doc = """
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, 1)
+
+    def test_oneof(self):
+
+        class TestDoc(Document):
+            @OneOf((1, 2, 3))
+            def a(self): 
+                return 1
+
+        doc = """
+        a: 2
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, 2)
+
+        doc = """
+        a: 4
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+    def test_dictconverter(self):
+        class TestDoc(Document):
+            @DictConverter({1:'one', 2:'two'})
+            def a(self): 
+                return 'one'
+
+        doc = """
+        a: 2
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, 'two')
+
+        doc = """
+        a: 4
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
 
 if __name__ == "__main__":
     unittest.main()

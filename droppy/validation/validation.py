@@ -54,3 +54,7 @@ def validator_decorator(base):
 
 NotEmpty = validator_decorator(fv.NotEmpty)
 Int = validator_decorator(fv.Int)
+ConfirmType = validator_decorator(fv.ConfirmType)
+Constant = validator_decorator(fv.Constant)
+OneOf = validator_decorator(fv.OneOf)
+DictConverter = validator_decorator(fv.DictConverter)
