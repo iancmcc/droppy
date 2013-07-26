@@ -2,6 +2,7 @@ import unittest
 
 from formencode import Invalid
 
+from droppy.validation.validation import NotEmpty, Int
 from droppy.validation.properties import Document, Property
 
 
@@ -91,10 +92,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return ThingDoc()
 
-        result = HttpDoc.loadYAML(doc)
-
-        self.assertTrue(isinstance(result, HttpDoc))
-        self.assertFalse(hasattr(result.http, 'notanattribute'))
+        self.assertRaises(Invalid, HttpDoc.loadYAML, doc)
 
     def test_json(self):
         import json
@@ -166,7 +164,6 @@ class TestParsing(unittest.TestCase):
         self.assertEquals(result.http.port, 9090)
 
 
-from droppy.validation.validation import NotEmpty
 
 class TestValidators(unittest.TestCase):
 
@@ -188,6 +185,21 @@ class TestValidators(unittest.TestCase):
         b: 1
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+    def test_int(self):
+
+        class TestDoc(Document):
+            @Int
+            def a(self): 
+                return "1"
+
+        doc = """
+        a: 12345
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, 12345)
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, 1)
 
 
 if __name__ == "__main__":

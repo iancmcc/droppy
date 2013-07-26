@@ -1,3 +1,6 @@
+#
+# Copyright (c) 2013 Ian McCracken. All rights reserved.
+#
 from types import FunctionType
 from functools import wraps
 import inspect
@@ -5,7 +8,10 @@ import inspect
 from pyxdeco import class_level_decorator
 import formencode.validators as fv
 
-#from .properties import ensure_property
+from formencode.validators import Validator
+from formencode.compound import All
+
+from .properties import Property
 
 
 def autocall_decorator(func):
@@ -27,33 +33,23 @@ def autocall_decorator(func):
     def func_wrapper(*args, **kw):
         if isFuncArg(*args, **kw):
             return func(*args, **kw)
-
         def functor(userFunc):
             return func(userFunc, *args, **kw)
-
         return functor
-
     return func_wrapper
 
 
-class Validator(object):
-
-    def __init__(self, base):
-        self._base = base
-
-    def apply(self, *args, **kwargs):
-        return self._base.to_python(*args, **kwargs)
-
-
-def validator_factory(base):
+def validator_decorator(base):
     @wraps(base)
     @autocall_decorator
     def decorator(prop, *args, **kwargs):
-        prop = ensure_property(prop, depth=5)
-        validator = Validator(base(*args, **kwargs))
-        prop.add_validator(validator)
-        return prop
+        if not isinstance(prop, Validator):
+            prop = Property(prop)
+        validator = base(*args, **kwargs)
+        compound = All(prop, validator, if_missing=prop.if_missing)
+        return compound
     return decorator
 
 
-NotEmpty = validator_factory(fv.NotEmpty)
+NotEmpty = validator_decorator(fv.NotEmpty)
+Int = validator_decorator(fv.Int)

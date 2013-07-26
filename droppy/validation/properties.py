@@ -25,7 +25,7 @@ class Document(Schema):
         """
         inst = cls()
         loaded = yaml.load(raw)
-        inst.results = inst.to_python(loaded)
+        inst.to_python(loaded)
         return inst
 
     @classmethod
@@ -38,17 +38,17 @@ class Document(Schema):
             loaded = json.loads(raw)
         else:
             loaded = json.load(raw)
-        inst.results = inst.to_python(loaded)
+        inst.to_python(loaded)
         return inst
 
-    def __getattr__(self, attr):
-        try:
-            result = getattr(self, 'fields', {})[attr]
-            if isinstance(result, Property):
-                result = getattr(self, 'results', {})[attr]
-            return result
-        except KeyError:
-            raise AttributeError(attr)
+    def to_python(self, *args, **kwargs):
+        results = super(Document, self).to_python(*args, **kwargs)
+        for k, v in results.iteritems():
+            field = self.fields.get(k)
+            if isinstance(field, Document):
+                v = field
+            setattr(self, k, v)
+        return results
 
 
 class Property(FancyValidator):
@@ -63,7 +63,7 @@ class Property(FancyValidator):
         if isinstance(default, Schema):
             cls.fields[self.__name__] = default
         else:
+            print "Setting default of", self.__name__, "to", default
             self.if_missing = default
-        self.state = cls
         return cls
 
