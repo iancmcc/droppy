@@ -6,6 +6,7 @@ from functools import wraps
 import inspect
 
 from pyxdeco import class_level_decorator
+from pyxdeco.advice import addClassAdvisor
 import formencode.validators as fv
 
 from formencode.validators import Validator
@@ -44,9 +45,9 @@ def validator_decorator(base):
     @autocall_decorator
     def decorator(prop, *args, **kwargs):
         if not isinstance(prop, Validator):
-            prop = Property(prop)
+            prop = Property(prop, 2)
         validator = base(*args, **kwargs)
-        compound = All(prop, validator, if_missing=prop.if_missing)
+        compound = All(prop, validator)
         return compound
     return decorator
 

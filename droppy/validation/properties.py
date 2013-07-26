@@ -52,10 +52,10 @@ class Document(Schema):
 
 
 class Property(FancyValidator):
-    def __init__(self, func):
+    def __init__(self, func, depth=0):
         self._func = func
         update_wrapper(self, func)
-        addClassAdvisor(self._on_class)
+        addClassAdvisor(self._on_class, depth=2+depth)
 
     def _on_class(self, cls):
         method = self._func.__get__(cls(), cls)
@@ -63,7 +63,6 @@ class Property(FancyValidator):
         if isinstance(default, Schema):
             cls.fields[self.__name__] = default
         else:
-            print "Setting default of", self.__name__, "to", default
             self.if_missing = default
         return cls
 

@@ -191,7 +191,7 @@ class TestValidators(unittest.TestCase):
         class TestDoc(Document):
             @Int
             def a(self): 
-                return "1"
+                return 1
 
         doc = """
         a: 12345
