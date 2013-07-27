@@ -3,7 +3,8 @@ import unittest
 from formencode import Invalid
 
 from droppy.validation.validation import NotEmpty, Int, ConfirmType, Constant
-from droppy.validation.validation import OneOf, DictConverter
+from droppy.validation.validation import OneOf, DictConverter, StringBool
+from droppy.validation.validation import Bool, Number, UnicodeString
 from droppy.validation.properties import Document, Property
 
 
@@ -280,6 +281,91 @@ class TestValidators(unittest.TestCase):
         a: 4
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+    def test_stringbool(self):
+        class TestDoc(Document):
+            @StringBool
+            def a(self): 
+                return True
+
+        doc = """
+        a: yes
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, True)
+
+        doc = """
+        a: f
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, False)
+
+        doc = """
+        a: j
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+    def test_bool(self):
+        class TestDoc(Document):
+            @Bool
+            def a(self): 
+                return True
+
+        doc = """
+        a: 1
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, True)
+
+        doc = """
+        a: 0
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, False)
+
+        doc = """
+        a: 
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, False)
+
+    def test_number(self):
+        class TestDoc(Document):
+            @Number
+            def a(self): 
+                return 1
+
+        doc = """
+        a: 1
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, 1)
+        self.assertTrue(isinstance(result.a, int))
+
+        doc = """
+        a: 0.56
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, 0.56)
+
+        doc = """
+        a: abc
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+    def test_unicode(self):
+        class TestDoc(Document):
+            @UnicodeString
+            def a(self): 
+                return u"abcde"
+
+        doc = """
+        a: whatever
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, u"whatever")
+        self.assertTrue(isinstance(result.a, unicode))
+
 
 if __name__ == "__main__":
     unittest.main()

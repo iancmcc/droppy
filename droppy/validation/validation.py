@@ -52,8 +52,13 @@ def validator_decorator(base):
     return decorator
 
 
-NotEmpty = validator_decorator(fv.NotEmpty)
+StringBool = validator_decorator(fv.StringBool)
+Bool = validator_decorator(fv.Bool)
 Int = validator_decorator(fv.Int)
+Number = validator_decorator(fv.Number)
+UnicodeString = validator_decorator(fv.UnicodeString)
+
+NotEmpty = validator_decorator(fv.NotEmpty)
 ConfirmType = validator_decorator(fv.ConfirmType)
 Constant = validator_decorator(fv.Constant)
 OneOf = validator_decorator(fv.OneOf)
