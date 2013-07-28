@@ -6,8 +6,9 @@ from droppy.validation.validation import NotEmpty, Int, ConfirmType, Constant
 from droppy.validation.validation import OneOf, DictConverter, StringBool
 from droppy.validation.validation import Bool, Number, UnicodeString
 from droppy.validation.validation import Set, String, StripField, MaxLength
-from droppy.validation.validation import MinLength, Regex, PlainText
-from droppy.validation.validation import IndexListConverter
+from droppy.validation.validation import MinLength, Regex, PlainText, Email
+from droppy.validation.validation import IndexListConverter, URL, IPAddress
+from droppy.validation.validation import CIDR, MACAddress
 from droppy.validation.properties import Document, Property
 
 
@@ -569,6 +570,124 @@ class TestValidators(unittest.TestCase):
 
         result = TestDoc.loadYAML("")
         self.assertEquals(result.a, "one")
+
+    def test_email(self):
+        class TestDoc(Document):
+            @Email
+            def a(self): 
+                return "ian@example.com"
+
+        doc = """
+        a: testing@gmail.com
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "testing@gmail.com")
+
+        doc = """
+        a: this is a test
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "ian@example.com")
+
+    def test_url(self):
+        class TestDoc(Document):
+            @URL
+            def a(self): 
+                return "http://www.google.com"
+
+        for url in (
+            "http://example.com",
+            "https://example.com",
+            "http://example.com:9090",
+            "http://example.com:9090/path/to/resource",
+        ):
+
+            doc = """
+            a: %s
+            """ % url
+            result = TestDoc.loadYAML(doc)
+            self.assertEquals(result.a, url)
+
+        doc = """
+        a: this is a test
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "http://www.google.com")
+
+    def test_ipaddress(self):
+        class TestDoc(Document):
+            @IPAddress
+            def a(self): 
+                return "10.1.2.3"
+
+        doc = """
+        a: 10.10.10.10
+        """ 
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, '10.10.10.10')
+
+        doc = """
+        a: 350.2.300.1
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "10.1.2.3")
+
+    def test_cidr(self):
+        class TestDoc(Document):
+            @CIDR
+            def a(self): 
+                return "10.1.2.3/24"
+
+        doc = """
+        a: 10.10.10.10
+        """ 
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, '10.10.10.10')
+
+        doc = """
+        a: 10.10.10.10/24
+        """ 
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, '10.10.10.10/24')
+
+        doc = """
+        a: 350.2.300.1
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        doc = """
+        a: 10.10.10.10/2
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "10.1.2.3/24")
+
+    def test_macaddress(self):
+        class TestDoc(Document):
+            @MACAddress
+            def a(self): 
+                return "aabbccddeeff"
+
+        doc = """
+        a: 00:11:22:33:44:55
+        """ 
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "001122334455")
+
+        doc = """
+        a: 00:11:22:33:44:jj
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "aabbccddeeff")
 
 if __name__ == "__main__":
     unittest.main()

@@ -78,3 +78,10 @@ MaxLength = validator_decorator(fv.MaxLength)
 MinLength = validator_decorator(fv.MinLength)
 Regex = validator_decorator(fv.Regex)
 PlainText = validator_decorator(fv.PlainText)
+
+Email = validator_decorator(fv.Email)
+URL = validator_decorator(fv.URL)
+IPAddress = validator_decorator(fv.IPAddress)
+CIDR = validator_decorator(fv.CIDR)
+MACAddress = validator_decorator(fv.MACAddress)
+
