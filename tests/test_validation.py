@@ -5,6 +5,8 @@ from formencode import Invalid
 from droppy.validation.validation import NotEmpty, Int, ConfirmType, Constant
 from droppy.validation.validation import OneOf, DictConverter, StringBool
 from droppy.validation.validation import Bool, Number, UnicodeString
+from droppy.validation.validation import Set, String, StripField
+from droppy.validation.validation import IndexListConverter
 from droppy.validation.properties import Document, Property
 
 
@@ -366,6 +368,90 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, u"whatever")
         self.assertTrue(isinstance(result.a, unicode))
 
+    def test_set(self):
+        class TestDoc(Document):
+            @Set
+            def a(self): 
+                return [1, 2, 3]
+
+        doc = """
+        a: 1
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, [1])
+
+        doc = """
+        a: 
+            - 1
+            - 2
+            - 3
+            - 3
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, [1, 2, 3, 3])
+
+        class TestDoc(Document):
+            @Set(use_set=True)
+            def a(self): 
+                return {1, 2, 3}
+
+        doc = """
+        a: 
+            - 1
+            - 2
+            - 3
+            - 3
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, {1, 2, 3})
+
+    def test_string(self):
+        class TestDoc(Document):
+            @String
+            def a(self): 
+                return "jkfd"
+
+        doc = """
+        a: 1
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "1")
+
+    def test_stripfield(self):
+        class TestDoc(Document):
+            @StripField('test')
+            def a(self): 
+                return (0, {'a':1})
+
+        doc = """
+        a: 
+            test: 1
+            b: 2
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, (1, {'b':2}))
+
+    def test_indexlistconverter(self):
+        class TestDoc(Document):
+            @IndexListConverter(["zero", "one", "two", "three"])
+            def a(self): 
+                return "one"
+
+        doc = """
+        a: 2
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "two")
+
+    def test_nodefault(self):
+        class TestDoc(Document):
+            @Property
+            def a(self): 
+                return Document.NoDefault
+
+        self.assertRaises(Invalid, TestDoc.loadYAML, "")
+
 
 if __name__ == "__main__":
     unittest.main()
+

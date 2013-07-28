@@ -9,6 +9,7 @@ from collections import defaultdict, Mapping
 from functools import wraps, update_wrapper
 from pyxdeco.advice import addClassAdvisor
 from formencode import Schema, FancyValidator
+from formencode.api import NoDefault
 
 
 MARKER = object()
@@ -18,6 +19,8 @@ class Document(Schema):
     """
     Represents a parseable document.
     """
+    NoDefault = NoDefault
+
     @classmethod
     def loadYAML(cls, raw):
         """
@@ -54,6 +57,7 @@ class Document(Schema):
 class Property(FancyValidator):
     def __init__(self, func, depth=0):
         self._func = func
+        self.accept_iterator = True
         update_wrapper(self, func)
         addClassAdvisor(self._on_class, depth=2+depth)
 

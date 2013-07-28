@@ -4,6 +4,7 @@
 from types import FunctionType
 from functools import wraps
 import inspect
+from copy import deepcopy
 
 from pyxdeco import class_level_decorator
 from pyxdeco.advice import addClassAdvisor
@@ -40,13 +41,18 @@ def autocall_decorator(func):
     return func_wrapper
 
 
-def validator_decorator(base):
+def validator_decorator(base, **extra_kwargs):
+    defaults = {
+        'strip': True
+    }
+    defaults.update(extra_kwargs)
     @wraps(base)
     @autocall_decorator
     def decorator(prop, *args, **kwargs):
         if not isinstance(prop, Validator):
             prop = Property(prop, 2)
-        validator = base(*args, **kwargs)
+        defaults.update(kwargs)
+        validator = base(*args, **defaults)
         compound = All(prop, validator)
         return compound
     return decorator
@@ -57,9 +63,13 @@ Bool = validator_decorator(fv.Bool)
 Int = validator_decorator(fv.Int)
 Number = validator_decorator(fv.Number)
 UnicodeString = validator_decorator(fv.UnicodeString)
+Set = validator_decorator(fv.Set)
+String = validator_decorator(fv.String)
 
 NotEmpty = validator_decorator(fv.NotEmpty)
 ConfirmType = validator_decorator(fv.ConfirmType)
 Constant = validator_decorator(fv.Constant)
 OneOf = validator_decorator(fv.OneOf)
+StripField = validator_decorator(fv.StripField, accept_iterator=True)
 DictConverter = validator_decorator(fv.DictConverter)
+IndexListConverter = validator_decorator(fv.IndexListConverter)
