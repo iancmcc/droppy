@@ -5,7 +5,8 @@ from formencode import Invalid
 from droppy.validation.validation import NotEmpty, Int, ConfirmType, Constant
 from droppy.validation.validation import OneOf, DictConverter, StringBool
 from droppy.validation.validation import Bool, Number, UnicodeString
-from droppy.validation.validation import Set, String, StripField
+from droppy.validation.validation import Set, String, StripField, MaxLength
+from droppy.validation.validation import MinLength, Regex, PlainText
 from droppy.validation.validation import IndexListConverter
 from droppy.validation.properties import Document, Property
 
@@ -189,6 +190,11 @@ class TestValidators(unittest.TestCase):
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
 
+        doc = """
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "default")
+
     def test_int(self):
 
         class TestDoc(Document):
@@ -230,6 +236,8 @@ class TestValidators(unittest.TestCase):
         a: notanint
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, 1)
 
     def test_constant(self):
 
@@ -244,9 +252,7 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, "XYZ")
 
-        doc = """
-        """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.loadYAML("")
         self.assertEquals(result.a, 1)
 
     def test_oneof(self):
@@ -267,6 +273,9 @@ class TestValidators(unittest.TestCase):
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
 
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, 1)
+
     def test_dictconverter(self):
         class TestDoc(Document):
             @DictConverter({1:'one', 2:'two'})
@@ -283,6 +292,9 @@ class TestValidators(unittest.TestCase):
         a: 4
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, 'one')
 
     def test_stringbool(self):
         class TestDoc(Document):
@@ -306,6 +318,9 @@ class TestValidators(unittest.TestCase):
         a: j
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, True)
 
     def test_bool(self):
         class TestDoc(Document):
@@ -331,6 +346,9 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, False)
 
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, True)
+
     def test_number(self):
         class TestDoc(Document):
             @Number
@@ -355,6 +373,9 @@ class TestValidators(unittest.TestCase):
         """
         self.assertRaises(Invalid, TestDoc.loadYAML, doc)
 
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, 1)
+
     def test_unicode(self):
         class TestDoc(Document):
             @UnicodeString
@@ -367,6 +388,9 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, u"whatever")
         self.assertTrue(isinstance(result.a, unicode))
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, u'abcde')
 
     def test_set(self):
         class TestDoc(Document):
@@ -390,6 +414,9 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, [1, 2, 3, 3])
 
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, [1, 2, 3])
+
         class TestDoc(Document):
             @Set(use_set=True)
             def a(self): 
@@ -405,6 +432,9 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, {1, 2, 3})
 
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, {1, 2, 3})
+
     def test_string(self):
         class TestDoc(Document):
             @String
@@ -416,6 +446,9 @@ class TestValidators(unittest.TestCase):
         """
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, "1")
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, 'jkfd')
 
     def test_stripfield(self):
         class TestDoc(Document):
@@ -431,6 +464,9 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, (1, {'b':2}))
 
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, (0, {'a':1}))
+
     def test_indexlistconverter(self):
         class TestDoc(Document):
             @IndexListConverter(["zero", "one", "two", "three"])
@@ -443,6 +479,9 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, "two")
 
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "one")
+
     def test_nodefault(self):
         class TestDoc(Document):
             @Property
@@ -451,6 +490,85 @@ class TestValidators(unittest.TestCase):
 
         self.assertRaises(Invalid, TestDoc.loadYAML, "")
 
+    def test_maxlength(self):
+        class TestDoc(Document):
+            @MaxLength(4)
+            def a(self): 
+                return "one"
+
+        doc = """
+        a: abcd
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "abcd")
+
+        doc = """
+        a: abcdefg
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "one")
+
+    def test_minlength(self):
+        class TestDoc(Document):
+            @MinLength(2)
+            def a(self): 
+                return "one"
+
+        doc = """
+        a: abcd
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "abcd")
+
+        doc = """
+        a: a
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "one")
+
+    def test_regex(self):
+        class TestDoc(Document):
+            @Regex(r'^[a-z]ne$')
+            def a(self): 
+                return "one"
+
+        doc = """
+        a: zne
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "zne")
+
+        doc = """
+        a: znx
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "one")
+        
+    def test_plaintext(self):
+        class TestDoc(Document):
+            @PlainText
+            def a(self): 
+                return "one"
+
+        doc = """
+        a: this_is_a_test
+        """
+        result = TestDoc.loadYAML(doc)
+        self.assertEquals(result.a, "this_is_a_test")
+
+        doc = """
+        a: this is a test
+        """
+        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+
+        result = TestDoc.loadYAML("")
+        self.assertEquals(result.a, "one")
 
 if __name__ == "__main__":
     unittest.main()

@@ -73,3 +73,8 @@ OneOf = validator_decorator(fv.OneOf)
 StripField = validator_decorator(fv.StripField, accept_iterator=True)
 DictConverter = validator_decorator(fv.DictConverter)
 IndexListConverter = validator_decorator(fv.IndexListConverter)
+
+MaxLength = validator_decorator(fv.MaxLength)
+MinLength = validator_decorator(fv.MinLength)
+Regex = validator_decorator(fv.Regex)
+PlainText = validator_decorator(fv.PlainText)
