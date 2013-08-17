@@ -15,4 +15,31 @@
 ##  limitations under the License.
 ##
 ###############################################################################
+from formencode import Invalid
+from .exceptions import ConfigurationException
+from .configuration import DroppyConfiguration
+
+
+__all__ = ["ConfigurationException", "DroppyConfiguration",
+           "load_configuration"]
+
+
+def load_configuration(klass, filename):
+    if not issubclass(klass, DroppyConfiguration):
+        raise ConfigurationException(
+            "Configuration must subclass droppy.config.DroppyConfiguration")
+    try:
+        with open(filename, 'r') as config_file:
+            try:
+                return klass.load(config_file)
+            except ValueError:
+                raise ConfigurationException(
+                    "Unable to parse {0} as either YAML or JSON.".format(
+                        filename))
+            except Invalid as e:
+                raise ConfigurationException("{0} failed to validate: {1}".format(
+                    filename, e.msg))
+    except IOError:
+        raise ConfigurationException(
+            "Couldn't open file {0}; does it exist?".format(filename))
 

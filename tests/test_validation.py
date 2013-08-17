@@ -42,7 +42,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return None
 
-        result = HttpDoc.loadYAML(doc)
+        result = HttpDoc.load(doc)
 
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http, 8080)
@@ -64,7 +64,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return PortDoc()
 
-        result = HttpDoc.loadYAML(doc)
+        result = HttpDoc.load(doc)
 
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http.port, 8080)
@@ -90,7 +90,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return PortDoc()
 
-        result = HttpDoc.loadYAML(doc)
+        result = HttpDoc.load(doc)
 
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http.port, 8080)
@@ -114,7 +114,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return ThingDoc()
 
-        self.assertRaises(Invalid, HttpDoc.loadYAML, doc)
+        self.assertRaises(Invalid, HttpDoc.load, doc)
 
     def test_json(self):
         import json
@@ -132,7 +132,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return PortDoc()
 
-        result = HttpDoc.loadJSON(doc)
+        result = HttpDoc.load(doc)
 
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http.port, 9090)
@@ -154,7 +154,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return PortDoc()
 
-        result = HttpDoc.loadJSON(doc)
+        result = HttpDoc.load(doc)
 
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http.port, 9090)
@@ -180,7 +180,7 @@ class TestParsing(unittest.TestCase):
             def http(self): 
                 return PortDoc()
 
-        result = HttpDoc.loadYAML(doc)
+        result = HttpDoc.load(doc)
 
         self.assertTrue(isinstance(result, HttpDoc))
         self.assertEquals(result.http.port, 9090)
@@ -199,18 +199,18 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: blah
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "blah")
 
         doc = """
         a: 
         b: 1
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
         doc = """
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "default")
 
     def test_int(self):
@@ -223,9 +223,9 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 12345
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, 12345)
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, 1)
 
     def test_confirm_type(self):
@@ -238,8 +238,8 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: notanint
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
-        result = TestDoc.loadYAML("")
+        self.assertRaises(Invalid, TestDoc.load, doc)
+        result = TestDoc.load("")
         self.assertEquals(result.a, 1)
 
     def test_constant(self):
@@ -252,10 +252,10 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: notanint
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "XYZ")
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, 1)
 
     def test_oneof(self):
@@ -268,15 +268,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 2
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, 2)
 
         doc = """
         a: 4
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, 1)
 
     def test_dictconverter(self):
@@ -288,15 +288,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 2
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, 'two')
 
         doc = """
         a: 4
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, 'one')
 
     def test_stringbool(self):
@@ -308,21 +308,21 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: yes
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, True)
 
         doc = """
         a: f
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, False)
 
         doc = """
         a: j
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, True)
 
     def test_bool(self):
@@ -334,22 +334,22 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 1
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, True)
 
         doc = """
         a: 0
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, False)
 
         doc = """
         a: 
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, False)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, True)
 
     def test_number(self):
@@ -361,22 +361,22 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 1
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, 1)
         self.assertTrue(isinstance(result.a, int))
 
         doc = """
         a: 0.56
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, 0.56)
 
         doc = """
         a: abc
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, 1)
 
     def test_unicode(self):
@@ -388,11 +388,11 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: whatever
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, u"whatever")
         self.assertTrue(isinstance(result.a, unicode))
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, u'abcde')
 
     def test_set(self):
@@ -417,7 +417,7 @@ class TestValidators(unittest.TestCase):
         #result = TestDoc.loadYAML(doc)
         #self.assertEquals(result.a, [1, 2, 3, 3])
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, [1, 2, 3])
 
         #class TestDoc(Document):
@@ -447,10 +447,10 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 1
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "1")
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, 'jkfd')
 
     def test_stripfield(self):
@@ -464,10 +464,10 @@ class TestValidators(unittest.TestCase):
             test: 1
             b: 2
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, (1, {'b':2}))
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, (0, {'a':1}))
 
     def test_indexlistconverter(self):
@@ -479,10 +479,10 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 2
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "two")
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "one")
 
     def test_nodefault(self):
@@ -491,7 +491,7 @@ class TestValidators(unittest.TestCase):
             def a(self): 
                 return ParsedDocument.NoDefault
 
-        self.assertRaises(Invalid, TestDoc.loadYAML, "")
+        self.assertRaises(Invalid, TestDoc.load, "")
 
     def test_maxlength(self):
         class TestDoc(ParsedDocument):
@@ -502,15 +502,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: abcd
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "abcd")
 
         doc = """
         a: abcdefg
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "one")
 
     def test_minlength(self):
@@ -522,15 +522,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: abcd
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "abcd")
 
         doc = """
         a: a
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "one")
 
     def test_regex(self):
@@ -542,15 +542,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: zne
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "zne")
 
         doc = """
         a: znx
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "one")
         
     def test_plaintext(self):
@@ -562,15 +562,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: this_is_a_test
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "this_is_a_test")
 
         doc = """
         a: this is a test
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "one")
 
     def test_email(self):
@@ -582,15 +582,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: testing@gmail.com
         """
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "testing@gmail.com")
 
         doc = """
         a: this is a test
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "ian@example.com")
 
     def test_url(self):
@@ -609,15 +609,15 @@ class TestValidators(unittest.TestCase):
             doc = """
             a: %s
             """ % url
-            result = TestDoc.loadYAML(doc)
+            result = TestDoc.load(doc)
             self.assertEquals(result.a, url)
 
         doc = """
         a: this is a test
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "http://www.google.com")
 
     def test_ipaddress(self):
@@ -629,15 +629,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 10.10.10.10
         """ 
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, '10.10.10.10')
 
         doc = """
         a: 350.2.300.1
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "10.1.2.3")
 
     def test_cidr(self):
@@ -649,26 +649,26 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 10.10.10.10
         """ 
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, '10.10.10.10')
 
         doc = """
         a: 10.10.10.10/24
         """ 
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, '10.10.10.10/24')
 
         doc = """
         a: 350.2.300.1
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
         doc = """
         a: 10.10.10.10/2
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "10.1.2.3/24")
 
     def test_macaddress(self):
@@ -680,15 +680,15 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: 00:11:22:33:44:55
         """ 
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "001122334455")
 
         doc = """
         a: 00:11:22:33:44:jj
         """
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
-        result = TestDoc.loadYAML("")
+        result = TestDoc.load("")
         self.assertEquals(result.a, "aabbccddeeff")
 
     def test_chaining(self):
@@ -703,25 +703,25 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: az:11:22:33:44:55
         """ 
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
         # Fail the regex but not the mac address
         doc = """
         a: af:11:22:33:44:55
         """ 
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
         # Fail both
         doc = """
         a: xx:11:22:33:44:55
         """ 
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
         # Succeed both
         doc = """
         a: aa:11:22:33:44:55
         """ 
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "aa1122334455")
 
         class TestDoc(ParsedDocument):
@@ -733,13 +733,13 @@ class TestValidators(unittest.TestCase):
         doc = """
         a: af:11:22:33:44:55
         """ 
-        result = TestDoc.loadYAML(doc)
+        result = TestDoc.load(doc)
         self.assertEquals(result.a, "af1122334455")
 
         doc = """
         a: b
         """ 
-        self.assertRaises(Invalid, TestDoc.loadYAML, doc)
+        self.assertRaises(Invalid, TestDoc.load, doc)
 
 
 if __name__ == "__main__":

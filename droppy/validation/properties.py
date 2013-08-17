@@ -16,7 +16,6 @@
 ##
 ###############################################################################
 import sys
-import json
 from functools import update_wrapper
 
 import yaml
@@ -33,35 +32,16 @@ class ParsedDocument(Schema):
     NoDefault = NoDefault
 
     @classmethod
-    def loadYAML(cls, raw):
+    def load(cls, raw):
         """
-        Parse a document according to this schema.
-        """
-        inst = cls()
-        loaded = yaml.load(raw)
-        inst.to_python(loaded)
-        return inst
-
-    @classmethod
-    def loadJSON(cls, raw):
-        """
-        Parse a JSON document.
+        Validate a parsed file or dictionary according to this schema.
         """
         inst = cls()
-        if isinstance(raw, basestring):
-            loaded = json.loads(raw)
+        if isinstance(raw, dict):
+            loaded = raw
         else:
-            loaded = json.load(raw)
+            loaded = yaml.load(raw)
         inst.to_python(loaded)
-        return inst
-
-    @classmethod
-    def loadDict(cls, raw):
-        """
-        Build a document from a dictionary.
-        """
-        inst = cls()
-        inst.to_python(raw)
         return inst
 
     def list_properties(self):
