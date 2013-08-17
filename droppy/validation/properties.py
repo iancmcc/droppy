@@ -3,16 +3,34 @@
 #
 from __future__ import absolute_import
 
+import sys
 import json
 import yaml
 from collections import defaultdict, Mapping
 from functools import wraps, update_wrapper
-from pyxdeco.advice import addClassAdvisor
+from pyxdeco.advice import addClassAdvisor, getFrameInfo
 from formencode import Schema, FancyValidator
 from formencode.api import NoDefault
 
 
 MARKER = object()
+
+
+def addClassAdvisorToNearestClass(advisor):
+    """
+    Walk frames until a Document is found, rather than using a static depth.
+    """
+    depth = 0
+    while True:
+        try:
+            frame = sys._getframe(depth)
+        except ValueError:
+            raise Exception("Validators must be used to decorate Document methods")
+        kind, module, caller_locals, caller_globals = getFrameInfo(frame)
+        if kind == 'class':
+            break
+        depth += 1
+    addClassAdvisor(advisor, depth+1)
 
 
 class Document(Schema):
@@ -55,11 +73,11 @@ class Document(Schema):
 
 
 class Property(FancyValidator):
-    def __init__(self, func, depth=0):
+    def __init__(self, func):
         self._func = func
         self.accept_iterator = True
         update_wrapper(self, func)
-        addClassAdvisor(self._on_class, depth=2+depth)
+        addClassAdvisorToNearestClass(self._on_class)
 
     def _on_class(self, cls):
         method = self._func.__get__(cls(), cls)

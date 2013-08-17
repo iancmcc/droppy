@@ -1,45 +1,14 @@
 #
 # Copyright (c) 2013 Ian McCracken. All rights reserved.
 #
-from types import FunctionType
-from functools import wraps
+from functools import wraps, update_wrapper
 import inspect
-from copy import deepcopy
 
-from pyxdeco import class_level_decorator
-from pyxdeco.advice import addClassAdvisor
+from decorator import decorator
 import formencode.validators as fv
-
-from formencode.validators import Validator
 from formencode.compound import All
 
-from .properties import Property
-
-
-def autocall_decorator(func):
-
-    def isFuncArg(*args, **kw):
-        return len(args) == 1 and len(kw) == 0 and (
-            inspect.isfunction(args[0]) or isinstance(args[0], type))
-
-    if isinstance(func, type):
-        def class_wrapper(*args, **kw):
-            if isFuncArg(*args, **kw):
-                return func()(*args, **kw) # create class before usage
-            return func(*args, **kw)
-        class_wrapper.__name__ = func.__name__
-        class_wrapper.__module__ = func.__module__
-        return class_wrapper
-
-    @wraps(func)
-    def func_wrapper(*args, **kw):
-        if isFuncArg(*args, **kw):
-            return func(*args, **kw)
-        def functor(userFunc):
-            return func(userFunc, *args, **kw)
-        return functor
-    return func_wrapper
-
+from .properties import Property, Document
 
 def validator_decorator(base, **extra_kwargs):
     defaults = {
@@ -47,16 +16,16 @@ def validator_decorator(base, **extra_kwargs):
     }
     defaults.update(extra_kwargs)
     @wraps(base)
-    @autocall_decorator
-    def decorator(prop, *args, **kwargs):
-        if not isinstance(prop, Validator):
-            prop = Property(prop, 2)
-        defaults.update(kwargs)
-        validator = base(*args, **defaults)
-        compound = All(prop, validator)
-        return compound
-    return decorator
-
+    def factory(*args, **kwargs):
+        def the_decorator(prop):
+            if not isinstance(prop, fv.Validator):
+                prop = Property(prop)
+            defaults.update(kwargs)
+            validator = base(*args, **defaults)
+            compound = All(prop, validator)
+            return compound
+        return the_decorator
+    return factory
 
 StringBool = validator_decorator(fv.StringBool)
 Bool = validator_decorator(fv.Bool)
@@ -84,4 +53,5 @@ URL = validator_decorator(fv.URL)
 IPAddress = validator_decorator(fv.IPAddress)
 CIDR = validator_decorator(fv.CIDR)
 MACAddress = validator_decorator(fv.MACAddress)
+
 
