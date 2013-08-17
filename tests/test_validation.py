@@ -1,15 +1,32 @@
+###############################################################################
+##
+##  Copyright 2013 Ian McCracken
+##
+##  Licensed under the Apache License, Version 2.0 (the "License");
+##  you may not use this file except in compliance with the License.
+##  You may obtain a copy of the License at
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+##  Unless required by applicable law or agreed to in writing, software
+##  distributed under the License is distributed on an "AS IS" BASIS,
+##  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+##  See the License for the specific language governing permissions and
+##  limitations under the License.
+##
+###############################################################################
 import unittest
 
 from formencode import Invalid
 
-from droppy.validation.validation import NotEmpty, Int, ConfirmType, Constant
-from droppy.validation.validation import OneOf, DictConverter, StringBool
-from droppy.validation.validation import Bool, Number, UnicodeString
-from droppy.validation.validation import Set, String, StripField, MaxLength
-from droppy.validation.validation import MinLength, Regex, PlainText, Email
-from droppy.validation.validation import IndexListConverter, URL, IPAddress
-from droppy.validation.validation import CIDR, MACAddress
-from droppy.validation.properties import Document, Property
+from droppy.validation.validators import NotEmpty, Int, ConfirmType, Constant
+from droppy.validation.validators import OneOf, DictConverter, StringBool
+from droppy.validation.validators import Bool, Number, UnicodeString
+from droppy.validation.validators import Set, String, StripField, MaxLength
+from droppy.validation.validators import MinLength, Regex, PlainText, Email
+from droppy.validation.validators import IndexListConverter, URL, IPAddress
+from droppy.validation.validators import CIDR, MACAddress
+from droppy.validation.properties import ParsedDocument, ParsedProperty
 
 
 class TestParsing(unittest.TestCase):
@@ -19,9 +36,9 @@ class TestParsing(unittest.TestCase):
         http: 8080
         """.strip()
 
-        class HttpDoc(Document):
+        class HttpDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def http(self): 
                 return None
 
@@ -36,14 +53,14 @@ class TestParsing(unittest.TestCase):
             port: 8080
         """.strip()
 
-        class PortDoc(Document):
-            @Property
+        class PortDoc(ParsedDocument):
+            @ParsedProperty
             def port(self):
                 return 0
 
-        class HttpDoc(Document):
+        class HttpDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def http(self): 
                 return PortDoc()
 
@@ -58,18 +75,18 @@ class TestParsing(unittest.TestCase):
             port: 8080
         """.strip()
 
-        class PortDoc(Document):
-            @Property
+        class PortDoc(ParsedDocument):
+            @ParsedProperty
             def port(self):
                 return 0
 
-            @Property
+            @ParsedProperty
             def ssl(self):
                 return True
 
-        class HttpDoc(Document):
+        class HttpDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def http(self): 
                 return PortDoc()
 
@@ -85,15 +102,15 @@ class TestParsing(unittest.TestCase):
             notanattribute: 9090
         """.strip()
 
-        class ThingDoc(Document):
+        class ThingDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def whatever(self):
                 return 0
 
-        class HttpDoc(Document):
+        class HttpDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def http(self): 
                 return ThingDoc()
 
@@ -103,15 +120,15 @@ class TestParsing(unittest.TestCase):
         import json
         doc = json.dumps({'http':{'port':9090}})
 
-        class PortDoc(Document):
+        class PortDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def port(self):
                 return 0
 
-        class HttpDoc(Document):
+        class HttpDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def http(self): 
                 return PortDoc()
 
@@ -125,15 +142,15 @@ class TestParsing(unittest.TestCase):
         from cStringIO import StringIO
         doc = StringIO(json.dumps({'http':{'port':9090}}))
 
-        class PortDoc(Document):
+        class PortDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def port(self):
                 return 0
 
-        class HttpDoc(Document):
+        class HttpDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def http(self): 
                 return PortDoc()
 
@@ -151,15 +168,15 @@ class TestParsing(unittest.TestCase):
         doc = StringIO(yamldoc)
 
 
-        class PortDoc(Document):
+        class PortDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def port(self):
                 return 0
 
-        class HttpDoc(Document):
+        class HttpDoc(ParsedDocument):
 
-            @Property
+            @ParsedProperty
             def http(self): 
                 return PortDoc()
 
@@ -174,7 +191,7 @@ class TestValidators(unittest.TestCase):
 
     def test_notempty(self):
 
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @NotEmpty()
             def a(self): 
                 return "default"
@@ -198,7 +215,7 @@ class TestValidators(unittest.TestCase):
 
     def test_int(self):
 
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Int()
             def a(self): 
                 return 1
@@ -213,7 +230,7 @@ class TestValidators(unittest.TestCase):
 
     def test_confirm_type(self):
 
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @ConfirmType(subclass=int)
             def a(self): 
                 return 1
@@ -227,7 +244,7 @@ class TestValidators(unittest.TestCase):
 
     def test_constant(self):
 
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Constant("XYZ")
             def a(self): 
                 return 1
@@ -243,7 +260,7 @@ class TestValidators(unittest.TestCase):
 
     def test_oneof(self):
 
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @OneOf((1, 2, 3))
             def a(self): 
                 return 1
@@ -263,7 +280,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, 1)
 
     def test_dictconverter(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @DictConverter({1:'one', 2:'two'})
             def a(self): 
                 return 'one'
@@ -283,7 +300,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, 'one')
 
     def test_stringbool(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @StringBool()
             def a(self): 
                 return True
@@ -309,7 +326,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, True)
 
     def test_bool(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Bool()
             def a(self): 
                 return True
@@ -336,7 +353,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, True)
 
     def test_number(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Number()
             def a(self): 
                 return 1
@@ -363,7 +380,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, 1)
 
     def test_unicode(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @UnicodeString()
             def a(self): 
                 return u"abcde"
@@ -379,7 +396,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, u'abcde')
 
     def test_set(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Set()
             def a(self): 
                 return [1, 2, 3]
@@ -422,7 +439,7 @@ class TestValidators(unittest.TestCase):
         #self.assertEquals(result.a, {1, 2, 3})
 
     def test_string(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @String()
             def a(self): 
                 return "jkfd"
@@ -437,7 +454,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, 'jkfd')
 
     def test_stripfield(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @StripField('test')
             def a(self): 
                 return (0, {'a':1})
@@ -454,7 +471,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, (0, {'a':1}))
 
     def test_indexlistconverter(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @IndexListConverter(["zero", "one", "two", "three"])
             def a(self): 
                 return "one"
@@ -469,15 +486,15 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "one")
 
     def test_nodefault(self):
-        class TestDoc(Document):
-            @Property
+        class TestDoc(ParsedDocument):
+            @ParsedProperty
             def a(self): 
-                return Document.NoDefault
+                return ParsedDocument.NoDefault
 
         self.assertRaises(Invalid, TestDoc.loadYAML, "")
 
     def test_maxlength(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @MaxLength(4)
             def a(self): 
                 return "one"
@@ -497,7 +514,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "one")
 
     def test_minlength(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @MinLength(2)
             def a(self): 
                 return "one"
@@ -517,7 +534,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "one")
 
     def test_regex(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Regex(r'^[a-z]ne$')
             def a(self): 
                 return "one"
@@ -537,7 +554,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "one")
         
     def test_plaintext(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @PlainText()
             def a(self): 
                 return "one"
@@ -557,7 +574,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "one")
 
     def test_email(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Email()
             def a(self): 
                 return "ian@example.com"
@@ -577,7 +594,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "ian@example.com")
 
     def test_url(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @URL()
             def a(self): 
                 return "http://www.google.com"
@@ -604,7 +621,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "http://www.google.com")
 
     def test_ipaddress(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @IPAddress()
             def a(self): 
                 return "10.1.2.3"
@@ -624,7 +641,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "10.1.2.3")
 
     def test_cidr(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @CIDR()
             def a(self): 
                 return "10.1.2.3/24"
@@ -655,7 +672,7 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(result.a, "10.1.2.3/24")
 
     def test_macaddress(self):
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @MACAddress()
             def a(self): 
                 return "aabbccddeeff"
@@ -676,7 +693,7 @@ class TestValidators(unittest.TestCase):
 
     def test_chaining(self):
 
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @Regex("^([a-dz0-9][a-dz0-9]:?){6}$")
             @MACAddress()
             def a(self): 
@@ -707,7 +724,7 @@ class TestValidators(unittest.TestCase):
         result = TestDoc.loadYAML(doc)
         self.assertEquals(result.a, "aa1122334455")
 
-        class TestDoc(Document):
+        class TestDoc(ParsedDocument):
             @MACAddress()
             @String()
             def a(self): 

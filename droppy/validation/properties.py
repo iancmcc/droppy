@@ -1,41 +1,34 @@
-#
-# Copyright (c) 2013 Ian McCracken. All rights reserved.
-#
-from __future__ import absolute_import
-
+###############################################################################
+##
+##  Copyright 2013 Ian McCracken
+##
+##  Licensed under the Apache License, Version 2.0 (the "License");
+##  you may not use this file except in compliance with the License.
+##  You may obtain a copy of the License at
+##
+##      http://www.apache.org/licenses/LICENSE-2.0
+##
+##  Unless required by applicable law or agreed to in writing, software
+##  distributed under the License is distributed on an "AS IS" BASIS,
+##  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+##  See the License for the specific language governing permissions and
+##  limitations under the License.
+##
+###############################################################################
 import sys
 import json
+from functools import update_wrapper
+
 import yaml
-from collections import defaultdict, Mapping
-from functools import wraps, update_wrapper
 from pyxdeco.advice import addClassAdvisor, getFrameInfo
 from formencode import Schema, FancyValidator
 from formencode.api import NoDefault
 
 
-MARKER = object()
-
-
-def addClassAdvisorToNearestClass(advisor):
+class ParsedDocument(Schema):
     """
-    Walk frames until a Document is found, rather than using a static depth.
-    """
-    depth = 0
-    while True:
-        try:
-            frame = sys._getframe(depth)
-        except ValueError:
-            raise Exception("Validators must be used to decorate Document methods")
-        kind, module, caller_locals, caller_globals = getFrameInfo(frame)
-        if kind == 'class':
-            break
-        depth += 1
-    addClassAdvisor(advisor, depth+1)
-
-
-class Document(Schema):
-    """
-    Represents a parseable document.
+    Represents a document loaded from YAML or JSON that may have properties
+    defined.
     """
     NoDefault = NoDefault
 
@@ -62,22 +55,35 @@ class Document(Schema):
         inst.to_python(loaded)
         return inst
 
+    @classmethod
+    def loadDict(cls, raw):
+        """
+        Build a document from a dictionary.
+        """
+        inst = cls()
+        inst.to_python(raw)
+        return inst
+
+    def list_properties(self):
+        return self.fields.keys()
+
     def to_python(self, *args, **kwargs):
-        results = super(Document, self).to_python(*args, **kwargs)
+        results = super(ParsedDocument, self).to_python(*args, **kwargs)
         for k, v in results.iteritems():
             field = self.fields.get(k)
-            if isinstance(field, Document):
+            if isinstance(field, ParsedDocument):
                 v = field
             setattr(self, k, v)
         return results
 
 
-class Property(FancyValidator):
+class ParsedProperty(FancyValidator):
     def __init__(self, func):
         self._func = func
         self.accept_iterator = True
         update_wrapper(self, func)
-        addClassAdvisorToNearestClass(self._on_class)
+        _addClassAdvisorToNearestClass(self._on_class)
+        super(FancyValidator, self).__init__()
 
     def _on_class(self, cls):
         method = self._func.__get__(cls(), cls)
@@ -87,4 +93,22 @@ class Property(FancyValidator):
         else:
             self.if_missing = default
         return cls
+
+
+def _addClassAdvisorToNearestClass(advisor):
+    """
+    Walk frames until a class is found, rather than using a static depth.
+    """
+    depth = 0
+    while True:
+        try:
+            frame = sys._getframe(depth)
+        except ValueError:
+            raise Exception(
+                "Droppy validators must be used to decorate methods")
+        kind, module, caller_locals, caller_globals = getFrameInfo(frame)
+        if kind == 'class':
+            break
+        depth += 1
+    addClassAdvisor(advisor, depth + 1)
 
