@@ -15,4 +15,25 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from .subcommand import Subcommand
+
+class Subcommand(object):
+    """
+    Represents a subcommand that may be executed from the command line.
+    You can add custom parser options.
+    """
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+    def configure(self, parser):
+        """
+        Add options to the subparser for this command.
+        """
+        raise NotImplementedError
+
+    def run(self, app):
+        """
+        Do whatever you would do with this guy.
+        """
+        raise NotImplementedError
+

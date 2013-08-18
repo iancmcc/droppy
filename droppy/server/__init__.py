@@ -15,4 +15,3 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from .subcommand import Subcommand
