@@ -63,14 +63,16 @@ class Application(object):
         parser.add_argument('-c', '--config', default=None, 
                             help="Path to configuration file")
 
+    def _add_server_subcommand(self):
+        self.add_subcommand(ServerSubcommand())
+
     def run(self):
         self.initialize()
-        self.add_subcommand(ServerSubcommand())
+        self._add_server_subcommand()
         self.arguments = self._parser.parse_args()
         self.arguments.subcommand.run(self)
 
 
 if __name__ == "__main__":
     Application("droppy").run()
-
 
