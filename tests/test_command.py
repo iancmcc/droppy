@@ -15,4 +15,22 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from .server import ServerSubcommand
+import unittest
+
+from droppy.command import Subcommand
+
+
+class MySubcommand(Subcommand):
+    pass
+
+
+
+class TestSubcommand(unittest.TestCase):
+
+    def test_parsing(self):
+        cmd = MySubcommand("test", "This is a test subcommand")
+        pass
+
+
+if __name__ == "__main__":
+    unittest.main()

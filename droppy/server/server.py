@@ -15,4 +15,16 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from .server import ServerSubcommand
+from droppy.command import Subcommand
+
+
+class ServerSubcommand(Subcommand):
+
+    def __init__(self):
+        Subcommand.__init__(self, "server", "Run the server")
+
+    def configure(self, parser):
+        parser.add_argument("--test", help="A test")
+
+    def run(self, app):
+        print app
