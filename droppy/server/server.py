@@ -15,6 +15,7 @@
 ##  limitations under the License.
 ##
 ###############################################################################
+import bottle
 from droppy.command import Subcommand
 
 
@@ -27,4 +28,6 @@ class ServerSubcommand(Subcommand):
         parser.add_argument("--test", help="A test")
 
     def run(self, app):
-        print app.config.http.port
+        bottle.run(host=app.config.http.host, port=app.config.http.port,
+                server="gunicorn")
+

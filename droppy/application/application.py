@@ -74,10 +74,23 @@ class Application(object):
     def _add_server_subcommand(self):
         self.add_subcommand(ServerSubcommand())
 
+    def _split_args(self, args):
+        droppy, passthrough = [], []
+        gen = (x for x in args)
+        for arg in gen:
+            if arg == '--':
+                break
+            droppy.append(arg)
+        passthrough.extend(gen)
+        return droppy, passthrough
+
+
     def run(self):
+        args = list(sys.argv)
         self.initialize()
         self._add_server_subcommand()
-        self.arguments = self._parser.parse_args()
+        args, sys.argv[1:] = self._split_args(args)
+        self.arguments = self._parser.parse_args(args[1:])
         self._load_configuration(self.arguments.config)
         self.arguments.subcommand.run(self)
 
