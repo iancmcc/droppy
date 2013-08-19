@@ -26,21 +26,21 @@ class Configuration(ParsedDocument):
 
 class ServerConfiguration(Configuration):
 
-    @String
+    @String()
     def host(self):
         """
         Host to which the HTTP server should bind.
         """
         return '127.0.0.1'
 
-    @Int
+    @Int()
     def port(self):
         """
         The TCP/IP port on which to listen for incoming connections.
         """
         return 5000
     
-    @Int
+    @Int()
     def adminPort(self):
         """
         The TCP/IP port on which the admin server should listen for
