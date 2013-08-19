@@ -15,10 +15,46 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from droppy.validation import ParsedDocument
+from droppy.validation import ParsedDocument, String, Int, ParsedProperty
 
 
-class DroppyConfiguration(ParsedDocument):
-    pass
+class Configuration(ParsedDocument):
+    """
+    Base class for configurations.
+    """
+
+
+class ServerConfiguration(Configuration):
+
+    @String
+    def host(self):
+        """
+        Host to which the HTTP server should bind.
+        """
+        return '127.0.0.1'
+
+    @Int
+    def port(self):
+        """
+        The TCP/IP port on which to listen for incoming connections.
+        """
+        return 5000
+    
+    @Int
+    def adminPort(self):
+        """
+        The TCP/IP port on which the admin server should listen for
+        incoming connections.
+        """
+        return 55000
+
+
+class DroppyConfiguration(Configuration):
+
+    @ParsedProperty
+    def http(self):
+        return ServerConfiguration()
+
+
 
 

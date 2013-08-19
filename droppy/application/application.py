@@ -19,13 +19,14 @@ import sys
 import argparse
 
 from droppy.server import ServerSubcommand
+from droppy.config import DroppyConfiguration
 
 
 class Application(object):
     """
     A droppy application.
     """
-    def __init__(self, name, config_class=None):
+    def __init__(self, name, config_class=DroppyConfiguration):
         self._name = name
         self._config_class = config_class
         self._subcommands = {}
@@ -42,7 +43,7 @@ class Application(object):
 
     def initialize(self):
         """
-        This is where you set stuff up.
+        This is where you add commands.
         """
         pass
 
@@ -59,9 +60,16 @@ class Application(object):
     def _setup_parser(self):
         parser = self._parser = argparse.ArgumentParser(
             description=self.__class__.__doc__)
-        self._subparsers = parser.add_subparsers(help="Subcommands")
         parser.add_argument('-c', '--config', default=None, 
                             help="Path to configuration file")
+        self._subparsers = parser.add_subparsers(help="Subcommands")
+
+    def _load_configuration(self, filename):
+        if filename is None:
+            self.config = self._config_class.load("")
+        else:
+            with open(filename, 'r') as f:
+                self.config = self._config_class.load(f)
 
     def _add_server_subcommand(self):
         self.add_subcommand(ServerSubcommand())
@@ -70,6 +78,7 @@ class Application(object):
         self.initialize()
         self._add_server_subcommand()
         self.arguments = self._parser.parse_args()
+        self._load_configuration(self.arguments.config)
         self.arguments.subcommand.run(self)
 
 

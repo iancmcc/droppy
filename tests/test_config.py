@@ -18,14 +18,14 @@
 import unittest
 import os.path as op
 
-from droppy.config import DroppyConfiguration, load_configuration
+from droppy.config import Configuration, load_configuration
 from droppy.config import ConfigurationException
 from droppy.validation import Int, String, Regex
 
 
 _in_cfg = lambda *x:op.join(op.dirname(__file__), 'config', *x)
 
-class MyConfig(DroppyConfiguration):
+class MyConfig(Configuration):
     @Int()
     def some_value(self):
         return 1
@@ -35,7 +35,7 @@ class MyConfig(DroppyConfiguration):
         return "abc"
 
 
-class BadConfig(DroppyConfiguration):
+class BadConfig(Configuration):
     @Int()
     def some_value(self):
         return 1

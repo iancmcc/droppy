@@ -17,17 +17,17 @@
 ###############################################################################
 from formencode import Invalid
 from .exceptions import ConfigurationException
-from .configuration import DroppyConfiguration
+from .configuration import DroppyConfiguration, Configuration
 
 
 __all__ = ["ConfigurationException", "DroppyConfiguration",
-           "load_configuration"]
+           "Configuration", "load_configuration"]
 
 
 def load_configuration(klass, filename):
-    if not issubclass(klass, DroppyConfiguration):
+    if not issubclass(klass, Configuration):
         raise ConfigurationException(
-            "Configuration must subclass droppy.config.DroppyConfiguration")
+            "Configuration must subclass droppy.config.Configuration")
     try:
         with open(filename, 'r') as config_file:
             try:

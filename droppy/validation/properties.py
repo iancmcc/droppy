@@ -17,11 +17,36 @@
 ###############################################################################
 import sys
 from functools import update_wrapper
+from copy import deepcopy
 
 import yaml
 from pyxdeco.advice import addClassAdvisor, getFrameInfo
-from formencode import Schema, FancyValidator
+from formencode import Schema, FancyValidator, Invalid
 from formencode.api import NoDefault
+
+
+_MARKER = object()
+
+
+def _reset_fields(config_instance):
+    for k, v in config_instance.fields.iteritems():
+        if isinstance(v, ParsedDocument):
+            _reset_fields(v)
+            try:
+                v.to_python("")
+            except Invalid:
+                pass
+
+
+def get_defaults(config_cls):
+    d = {}
+    for k, v in config_cls.fields.iteritems():
+        default = getattr(v, 'if_missing', _MARKER)
+        if isinstance(default, ParsedDocument):
+            default = get_defaults(default.__class__)
+        if default is not _MARKER:
+            d[k] = default
+    return d
 
 
 class ParsedDocument(Schema):
@@ -37,6 +62,8 @@ class ParsedDocument(Schema):
         Validate a parsed file or dictionary according to this schema.
         """
         inst = cls()
+        _reset_fields(inst)
+
         if isinstance(raw, dict):
             loaded = raw
         else:
@@ -46,6 +73,10 @@ class ParsedDocument(Schema):
 
     def list_properties(self):
         return self.fields.keys()
+
+    @classmethod
+    def default(cls):
+        return cls.load({})
 
     def to_python(self, *args, **kwargs):
         results = super(ParsedDocument, self).to_python(*args, **kwargs)
@@ -70,6 +101,12 @@ class ParsedProperty(FancyValidator):
         default = method()
         if isinstance(default, Schema):
             cls.fields[self.__name__] = default
+            try:
+                default.if_missing = default.__class__.default()
+            except Invalid:
+                # No default is possible, because something underneath
+                # is required.
+                pass
         else:
             self.if_missing = default
         return cls
