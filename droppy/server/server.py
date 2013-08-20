@@ -15,19 +15,47 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-import bottle
-from droppy.command import Subcommand
+import sys
+
+from gevent import spawn
+from gevent.pool import Pool
+from gevent.event import Event
 
 
-class ServerSubcommand(Subcommand):
+class ServerFarm(object):
+    def __init__(self, size=None):
+        self.started = False
+        self.servers = []
+        self.pool = Pool(size)
+        self._stop_event = Event()
+        self._stop_event.set()
 
-    def __init__(self):
-        Subcommand.__init__(self, "server", "Run the server")
+    def add(self, server):
+        self.servers.append(server)
+        server.set_spawn(self.pool.spawn)
 
-    def configure(self, parser):
-        parser.add_argument("--test", help="A test")
+    def start(self):
+        self.started = True
+        self._stop_event.clear()
+        for server in self.servers:
+            server.start()
 
-    def run(self, app):
-        bottle.run(host=app.config.http.host, port=app.config.http.port,
-                server="gunicorn")
+    def stop(self, timeout=None):
+        self._stop_event.set()
+        for server in self.servers[:]:
+            server.stop()
+        self.pool.join(timeout=timeout)
+        self.pool.kill(block=True, timeout=1)
+
+    def serve_forever(self, stop_timeout=None):
+        if not self.started:
+            self.start()
+        try:
+            self._stop_event.wait()
+        except KeyboardInterrupt:
+            sys.exit(0)
+        finally:
+            spawn(self.stop, timeout=stop_timeout).join()
+
+
 

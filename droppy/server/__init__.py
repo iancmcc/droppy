@@ -15,4 +15,4 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from .server import ServerSubcommand
+from .command import ServerSubcommand
