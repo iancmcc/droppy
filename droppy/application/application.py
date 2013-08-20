@@ -125,16 +125,18 @@ class Application(object):
 
 if __name__ == "__main__":
 
-    from bottle import route
+    from bottle import get
+    from droppy.validation import String
+    import droppy
 
+    class MyConfiguration(DroppyConfiguration):
+        @String()
+        def name(self):
+            return "droppy"
 
-    @route("/thing")
-    def whatever():
-        return "hi"
+    @get("/name")
+    def get_name():
+        return droppy.app().config.name
 
-    @route("/other/thing")
-    def whatever2():
-        return "hi"
-
-    Application("droppy").run()
+    Application("droppy", MyConfiguration).run()
 

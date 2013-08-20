@@ -15,7 +15,28 @@
 ##  limitations under the License.
 ##
 ###############################################################################
+import logging
 from droppy.validation import ParsedDocument, String, Int, ParsedProperty
+from droppy.validation import DictConverter
+
+
+_LEVEL_CONVERSIONS = {
+    10: logging.DEBUG,
+    20: logging.INFO,
+    30: logging.WARN,
+    40: logging.ERROR,
+    50: logging.CRITICAL,
+    "debug": logging.DEBUG,
+    "DEBUG": logging.DEBUG,
+    "info": logging.INFO,
+    "INFO": logging.INFO,
+    "warn": logging.WARN,
+    "WARN": logging.WARN,
+    "error": logging.ERROR,
+    "ERROR": logging.ERROR,
+    "critical": logging.CRITICAL,
+    "CRITICAL": logging.CRITICAL
+}
 
 
 class Configuration(ParsedDocument):
@@ -49,11 +70,26 @@ class ServerConfiguration(Configuration):
         return 55000
 
 
+class LoggingConfiguration(Configuration):
+
+    @String()
+    def format(self):
+        return "%(levelname)s  [%(asctime)-15s] %(name)s: %(msg)s"
+
+    @DictConverter(_LEVEL_CONVERSIONS)
+    def level(self):
+        return logging.INFO
+
+
 class DroppyConfiguration(Configuration):
 
     @ParsedProperty
     def http(self):
         return ServerConfiguration()
+
+    @ParsedProperty
+    def logging(self):
+        return LoggingConfiguration()
 
 
 

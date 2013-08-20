@@ -15,13 +15,18 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from gevent import monkey
+from gevent import monkey, wsgi
 monkey.patch_all()
+
+import logging
 
 import bottle
 
 from droppy.command import Subcommand
 from .server import ServerFarm
+
+
+log = logging.getLogger("droppy.server")
 
 
 class ServerSubcommand(Subcommand):
@@ -32,21 +37,27 @@ class ServerSubcommand(Subcommand):
         parser.add_argument("--test", help="A test")
 
     def _log_routes(self, app):
-        print "Serving routes:"
+        msg = ["The following routes were found:", ""]
         for route in sorted(app.routes, key=lambda r: r.rule):
-            print "\t{method} {rule} {module}.{func}".format(module=route.callback.__module__,
-                                                             func=route.callback.__name__, **route.__dict__)
+            msg.append("\t{method}\t{rule}\t{module}.{func}".format(module=route.callback.__module__,
+                                                                    func=route.callback.__name__, **route.__dict__))
+        msg.append("")
+        log.info('\n'.join(msg))
+
+    def configure_logging(self, config):
+        logging.basicConfig(format=config.logging.format,
+                            level=config.logging.level)
 
     def run(self, app):
+        self.configure_logging(app.config)
+
         http = app.config.http
         host, port, admin = http.host, http.port, http.adminPort
         servers = []
 
         class DroppyGeventServer(bottle.ServerAdapter):
             def run(self, handler):
-                from gevent import wsgi
-                log = 'default'
-                servers.append(wsgi.WSGIServer((self.host, self.port), handler, log=log))
+                servers.append(wsgi.WSGIServer((self.host, self.port), handler))
 
         farm = ServerFarm(2)
 
@@ -54,17 +65,18 @@ class ServerSubcommand(Subcommand):
         app._admin_bottle = admin_app = bottle.Bottle()
         app._on_server.set()
 
-        print "Starting admin server"
+        log.info("Starting %s" % app.name)
+
+        log.info("Starting admin server...")
         admin_app.run(host=host, port=admin, server=DroppyGeventServer)
         self._log_routes(admin_app)
 
-        print "Starting main server"
+        log.info("Starting main server...")
         main_app.run(host=host, port=port, server=DroppyGeventServer)
         self._log_routes(main_app)
 
         for server in servers:
             farm.add(server)
-
 
         farm.serve_forever(2)
 
