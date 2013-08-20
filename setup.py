@@ -37,7 +37,9 @@ setup(name='droppy',
       install_requires=[
           'formencode',
           'pyyaml',
-          'pyxdeco'
+          'pyxdeco',
+          'bottle',
+          'gunicorn', 'gevent'
       ],
       entry_points="""
       """,

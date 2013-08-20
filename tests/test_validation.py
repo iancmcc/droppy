@@ -96,6 +96,52 @@ class TestParsing(unittest.TestCase):
         self.assertEquals(result.http.port, 8080)
         self.assertEquals(result.http.ssl, True)
 
+        result = HttpDoc.load("")
+
+        self.assertTrue(isinstance(result, HttpDoc))
+        self.assertEquals(result.http.port, 0)
+        self.assertEquals(result.http.ssl, True)
+
+        result = HttpDoc.load(doc)
+
+        self.assertTrue(isinstance(result, HttpDoc))
+        self.assertEquals(result.http.port, 8080)
+        self.assertEquals(result.http.ssl, True)
+
+
+    def test_defaults_with_notempty(self):
+
+        doc = """
+        http:
+            port: 8080
+            whatever: abc
+        """.strip()
+
+        class HttpDoc(ParsedDocument):
+
+            @String()
+            def whatever(self): 
+                return self.NoDefault
+
+            @Int()
+            @NotEmpty()
+            def port(self): 
+                return 100
+
+        class TestDoc(ParsedDocument):
+            @ParsedProperty
+            def http(self):
+                return HttpDoc()
+
+        result = TestDoc.load(doc)
+
+        self.assertTrue(isinstance(result, TestDoc))
+        self.assertEquals(result.http.port, 8080)
+        self.assertEquals(result.http.whatever, "abc")
+
+        self.assertRaises(Invalid, HttpDoc.load, "")
+
+
     def test_bad(self):
         doc = """
         http:

@@ -15,46 +15,25 @@
 ##  limitations under the License.
 ##
 ###############################################################################
-from droppy.validation import ParsedDocument, String, Int, ParsedProperty
 
-
-class Configuration(ParsedDocument):
+class Subcommand(object):
     """
-    Base class for configurations.
+    Represents a subcommand that may be executed from the command line.
+    You can add custom parser options.
     """
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
 
-
-class ServerConfiguration(Configuration):
-
-    @String()
-    def host(self):
+    def configure(self, parser):
         """
-        Host to which the HTTP server should bind.
+        Add options to the subparser for this command.
         """
-        return '127.0.0.1'
+        raise NotImplementedError
 
-    @Int()
-    def port(self):
+    def run(self, app):
         """
-        The TCP/IP port on which to listen for incoming connections.
+        Do whatever you would do with this guy.
         """
-        return 5000
-    
-    @Int()
-    def adminPort(self):
-        """
-        The TCP/IP port on which the admin server should listen for
-        incoming connections.
-        """
-        return 55000
-
-
-class DroppyConfiguration(Configuration):
-
-    @ParsedProperty
-    def http(self):
-        return ServerConfiguration()
-
-
-
+        raise NotImplementedError
 
