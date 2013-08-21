@@ -39,7 +39,8 @@ setup(name='droppy',
           'pyyaml',
           'pyxdeco',
           'bottle',
-          'gunicorn', 'gevent'
+          'gevent',
+          'decorator'
       ],
       entry_points="""
       """,

@@ -15,9 +15,14 @@
 ##  limitations under the License.
 ##
 ###############################################################################
+from gevent import monkey
+monkey.patch_all()
+
 import sys
 import argparse
+from gevent.event import Event
 
+import droppy
 from droppy.server import ServerSubcommand
 from droppy.config import DroppyConfiguration
 
@@ -26,12 +31,22 @@ class Application(object):
     """
     A droppy application.
     """
+
     def __init__(self, name, config_class=DroppyConfiguration):
         self._name = name
         self._config_class = config_class
         self._subcommands = {}
         self._setup_parser()
+        self._server_started = False
+        self._on_server = Event()
+        self._on_server.clear()
         self.arguments = None
+
+        self._main_bottle = None
+        self._admin_bottle = None
+
+        # Set the global instance
+        droppy.set_app(self)
 
     @property
     def name(self):
@@ -50,7 +65,7 @@ class Application(object):
     def add_subcommand(self, subcommand):
         if subcommand.name in self._subcommands:
             raise ValueError("Subcommand {0} has already been registered."
-                             .format(subcommand.name))
+            .format(subcommand.name))
         self._subcommands[subcommand.name] = subcommand
         subparser = self._subparsers.add_parser(
             subcommand.name, help=subcommand.description)
@@ -60,7 +75,7 @@ class Application(object):
     def _setup_parser(self):
         parser = self._parser = argparse.ArgumentParser(
             description=self.__class__.__doc__)
-        parser.add_argument('-c', '--config', default=None, 
+        parser.add_argument('-c', '--config', default=None,
                             help="Path to configuration file")
         self._subparsers = parser.add_subparsers(help="Subcommands")
 
@@ -74,6 +89,20 @@ class Application(object):
     def _add_server_subcommand(self):
         self.add_subcommand(ServerSubcommand())
 
+    @property
+    def started(self):
+        return self._server_started
+
+    @property
+    def server(self):
+        self._on_server.wait()
+        return self._main_bottle
+
+    @property
+    def admin(self):
+        self._on_server.wait()
+        return self._admin_bottle
+
     def _split_args(self, args):
         droppy, passthrough = [], []
         gen = (x for x in args)
@@ -83,7 +112,6 @@ class Application(object):
             droppy.append(arg)
         passthrough.extend(gen)
         return droppy, passthrough
-
 
     def run(self):
         args = list(sys.argv)
@@ -96,5 +124,19 @@ class Application(object):
 
 
 if __name__ == "__main__":
-    Application("droppy").run()
+
+    from bottle import get
+    from droppy.validation import String
+    import droppy
+
+    class MyConfiguration(DroppyConfiguration):
+        @String()
+        def name(self):
+            return "droppy"
+
+    @get("/name")
+    def get_name():
+        return droppy.app().config.name
+
+    Application("droppy", MyConfiguration).run()
 
