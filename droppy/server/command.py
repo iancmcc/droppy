@@ -57,7 +57,7 @@ class ServerSubcommand(Subcommand):
 
         class DroppyGeventServer(bottle.ServerAdapter):
             def run(self, handler):
-                servers.append(wsgi.WSGIServer((self.host, self.port), handler))
+                servers.append(wsgi.WSGIServer((self.host, self.port), handler, log="default"))
 
         farm = ServerFarm(2)
 
